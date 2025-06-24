@@ -1,7 +1,6 @@
 from flask import Flask, request, jsonify, render_template
 import xgboost as xgb
 import numpy as np
-import pandas as pd
 import pickle
 
 app = Flask(__name__)
@@ -10,9 +9,13 @@ app = Flask(__name__)
 with open("best_xgboost_model.pkl", "rb") as file:
     model = pickle.load(file)
 
+# Load the saved scaler
+with open("scaler.pkl", "rb") as scaler_file:
+    scaler = pickle.load(scaler_file)
+
 @app.route('/')
 def home():
-    return render_template('index.html')  # Create this HTML for web form inputs
+    return render_template('index.html')  # Ensure this file exists
 
 @app.route('/predict', methods=['POST'])
 def predict():
@@ -24,12 +27,15 @@ def predict():
             input_data = request.get_json(force=True)
             input_data = [input_data[feat] for feat in input_data]
 
-        # Convert to correct format
+        # Convert to array and reshape
         data = np.array(input_data).reshape(1, -1)
-        
-        # Predict
-        prediction = model.predict(data)
-        result = int(prediction[0])  # Or float if probability
+
+        # Normalize input data using the scaler
+        normalized_data = scaler.transform(data)
+
+        # Predict using the model
+        prediction = model.predict(normalized_data)
+        result = int(prediction[0])
 
         return jsonify({'prediction': result})
 
