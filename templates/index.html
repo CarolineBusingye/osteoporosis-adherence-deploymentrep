@@ -1,0 +1,16 @@
+<!doctype html>
+<html>
+<head><title>Osteoporosis Adherence Predictor</title></head>
+<body>
+  <h2>Enter Patient Data</h2>
+  <form action="/predict" method="post">
+    <input name="Age" placeholder="Age" /><br/>
+    <input name="Body_Weight" placeholder="Body Weight" /><br/>
+    <input name="Calcium_Intake" placeholder="Calcium Intake (0/1)" /><br/>
+    <input name="Vitamin_D_Intake" placeholder="Vitamin D Intake (0/1)" /><br/>
+    <input name="Smoking" placeholder="Smoking (0/1)" /><br/>
+    <!-- Add all required features here -->
+    <input type="submit" value="Predict" />
+  </form>
+</body>
+</html>
