@@ -7,7 +7,7 @@ import pickle
 app = Flask(__name__)
 
 # Load the saved XGBoost model
-with open("xgb_model.pkl", "rb") as file:
+with open("best_xgboost_model.pkl", "rb") as file:
     model = pickle.load(file)
 
 @app.route('/')
