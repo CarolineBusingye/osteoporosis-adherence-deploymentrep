@@ -3,17 +3,58 @@
 <head>
     <title>Osteoporosis Adherence Predictor</title>
     <style>
-        body { font-family: Arial; background: #f4f4f4; padding: 30px; }
-        form { background: #fff; padding: 25px; border-radius: 10px; max-width: 600px; margin: auto; }
-        label { margin-top: 10px; display: block; }
-        input, select { width: 100%; padding: 8px; margin-top: 5px; }
-        button { margin-top: 20px; padding: 10px; background: #007bff; color: white; border: none; width: 100%; }
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+            background-color: #f2f2f2;
+        }
+
+        h2 {
+            color: #333;
+        }
+
+        form {
+            background-color: white;
+            padding: 25px;
+            border-radius: 10px;
+            width: 500px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+
+        label {
+            display: block;
+            margin-top: 10px;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 8px;
+            margin-top: 5px;
+        }
+
+        button {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            width: 100%;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+
+        .result {
+            margin-top: 20px;
+            font-weight: bold;
+            color: green;
+        }
     </style>
 </head>
 <body>
-    <h2>Osteoporosis Treatment Adherence Predictor</h2>
-    <form action="/predict" method="POST">
 
+    <h2>Osteoporosis Adherence Prediction</h2>
+    <form method="POST" action="/predict">
+        <!-- Numerical Inputs -->
         <label>Age:</label>
         <input type="number" name="Age" required>
 
@@ -23,22 +64,7 @@
         <label>Adherence (0 = No, 1 = Yes):</label>
         <input type="number" name="Adherence" min="0" max="1" required>
 
-        <label>Race/Ethnicity (0 to 4):</label>
-        <input type="number" name="Race/Ethnicity" min="0" max="4" required>
-
-        <label>Body Weight (kg):</label>
-        <input type="number" name="Body Weight" required>
-
-        <label>Calcium Intake (0 = Low, 1 = Adequate):</label>
-        <input type="number" name="Calcium Intake" min="0" max="1" required>
-
-        <label>Vitamin D Intake (0 = Insufficient, 1 = Sufficient):</label>
-        <input type="number" name="Vitamin D Intake" min="0" max="1" required>
-
-        <label>Physical Activity (0 = Low, 1 = High):</label>
-        <input type="number" name="Physical Activity" min="0" max="1" required>
-
-        <!-- One-hot categorical inputs -->
+        <!-- One-Hot Encoded Categorical Inputs -->
         <label>Gender:</label>
         <select name="Gender_Female">
             <option value="1">Female</option>
@@ -68,7 +94,9 @@
         <input type="hidden" name="Smoking_Yes" value="0">
 
         <label>Alcohol Consumption:</label>
-        <input type="number" name="Alcohol Consumption_Moderate" value="1">
+        <select name="Alcohol Consumption_Moderate">
+            <option value="1">Moderate</option>
+        </select>
 
         <label>Medical Conditions:</label>
         <select name="Medical Conditions_Hyperthyroidism">
@@ -79,7 +107,7 @@
 
         <label>Medications:</label>
         <select name="Medications_Corticosteroids">
-            <option value="1">Using</option>
+            <option value="1">Using Corticosteroids</option>
             <option value="0">Not Using</option>
         </select>
 
@@ -90,7 +118,8 @@
         </select>
         <input type="hidden" name="Prior Fractures_Yes" value="0">
 
-        <button type="submit">Predict</button>
+        <button type="submit">Predict Adherence</button>
     </form>
+
 </body>
 </html>
