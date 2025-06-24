@@ -6,11 +6,11 @@ import pickle
 app = Flask(__name__)
 
 # Load the saved XGBoost model
-with open("best_xgboost_model (1).pkl", "rb") as file:
+with open("best_xgboost_model (2).pkl", "rb") as file:
     model = pickle.load(file)
 
 # Load the saved scaler
-with open("scaler (2).pkl", "rb") as scaler_file:
+with open("scaler (3).pkl", "rb") as scaler_file:
     scaler = pickle.load(scaler_file)
 
 @app.route('/')
