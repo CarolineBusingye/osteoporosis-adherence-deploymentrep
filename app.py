@@ -5,7 +5,7 @@ import numpy as np
 app = Flask(__name__)
 
 # Load your trained model
-with open('scaler.pkl', 'rb') as f:
+with open('best_xgboost_model.pkl', 'rb') as f:
     model = pickle.load(f)
 
 @app.route('/')
