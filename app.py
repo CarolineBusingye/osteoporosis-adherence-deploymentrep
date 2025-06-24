@@ -2,24 +2,24 @@ from flask import Flask, request, jsonify, render_template
 import xgboost as xgb
 import numpy as np
 import joblib
-
+from sklearn.preprocessing import MinMaxScaler
 
 app = Flask(__name__)
-from sklearn.preprocessing import MinMaxScaler
-import numpy as np
 
-# Manually reconstruct MinMaxScaler
+# Load the saved XGBoost model
+model = joblib.load("best_xgboost_model.pkl")
+
+# Manually recreate the MinMaxScaler
 scaler = MinMaxScaler()
-scaler.min_ = np.array([0., 0., 0.])  # calculated as -min/(max-min)
-scaler.scale_ = 1 / (np.array([90.  1.  1.]) - np.array([18.  0.  0..]))
-scaler.data_min_ = np.array([18.  0.  0.])
-scaler.data_max_ = np.array([90.  1.  1.])
+scaler.data_min_ = np.array([18., 0., 0.])
+scaler.data_max_ = np.array([90., 1., 1.])
 scaler.data_range_ = scaler.data_max_ - scaler.data_min_
-model = joblib.load("best_xgboost_model (2).pkl")
+scaler.scale_ = 1 / scaler.data_range_
+scaler.min_ = -scaler.data_min_ * scaler.scale_
 
 @app.route('/')
 def home():
-    return render_template('index.html')  # Ensure this file exists
+    return render_template('index.html')  # Ensure this exists in templates/
 
 @app.route('/predict', methods=['POST'])
 def predict():
@@ -31,13 +31,13 @@ def predict():
             input_data = request.get_json(force=True)
             input_data = [input_data[feat] for feat in input_data]
 
-        # Convert to array and reshape
+        # Convert to numpy array
         data = np.array(input_data).reshape(1, -1)
 
-        # Normalize input data using the scaler
+        # Normalize the input using manually created scaler
         normalized_data = scaler.transform(data)
 
-        # Predict using the model
+        # Predict
         prediction = model.predict(normalized_data)
         result = int(prediction[0])
 
