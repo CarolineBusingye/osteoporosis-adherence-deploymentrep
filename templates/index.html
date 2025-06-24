@@ -1,16 +1,96 @@
-<!doctype html>
+<!DOCTYPE html>
 <html>
-<head><title>Osteoporosis Adherence Predictor</title></head>
+<head>
+    <title>Osteoporosis Adherence Predictor</title>
+    <style>
+        body { font-family: Arial; background: #f4f4f4; padding: 30px; }
+        form { background: #fff; padding: 25px; border-radius: 10px; max-width: 600px; margin: auto; }
+        label { margin-top: 10px; display: block; }
+        input, select { width: 100%; padding: 8px; margin-top: 5px; }
+        button { margin-top: 20px; padding: 10px; background: #007bff; color: white; border: none; width: 100%; }
+    </style>
+</head>
 <body>
-  <h2>Enter Patient Data</h2>
-  <form action="/predict" method="post">
-    <input name="Age" placeholder="Age" /><br/>
-    <input name="Body_Weight" placeholder="Body Weight" /><br/>
-    <input name="Calcium_Intake" placeholder="Calcium Intake (0/1)" /><br/>
-    <input name="Vitamin_D_Intake" placeholder="Vitamin D Intake (0/1)" /><br/>
-    <input name="Smoking" placeholder="Smoking (0/1)" /><br/>
-    <!-- Add all required features here -->
-    <input type="submit" value="Predict" />
-  </form>
+    <h2>Osteoporosis Treatment Adherence Predictor</h2>
+    <form action="/predict" method="POST">
+
+        <label>Age:</label>
+        <input type="number" name="Age" required>
+
+        <label>Osteoporosis (0 = No, 1 = Yes):</label>
+        <input type="number" name="Osteoporosis" min="0" max="1" required>
+
+        <label>Adherence (0 = No, 1 = Yes):</label>
+        <input type="number" name="Adherence" min="0" max="1" required>
+
+        <label>Race/Ethnicity (0 to 4):</label>
+        <input type="number" name="Race/Ethnicity" min="0" max="4" required>
+
+        <label>Body Weight (kg):</label>
+        <input type="number" name="Body Weight" required>
+
+        <label>Calcium Intake (0 = Low, 1 = Adequate):</label>
+        <input type="number" name="Calcium Intake" min="0" max="1" required>
+
+        <label>Vitamin D Intake (0 = Insufficient, 1 = Sufficient):</label>
+        <input type="number" name="Vitamin D Intake" min="0" max="1" required>
+
+        <label>Physical Activity (0 = Low, 1 = High):</label>
+        <input type="number" name="Physical Activity" min="0" max="1" required>
+
+        <!-- One-hot categorical inputs -->
+        <label>Gender:</label>
+        <select name="Gender_Female">
+            <option value="1">Female</option>
+            <option value="0">Male</option>
+        </select>
+        <input type="hidden" name="Gender_Male" value="0">
+
+        <label>Hormonal Changes:</label>
+        <select name="Hormonal Changes_Normal">
+            <option value="1">Normal</option>
+            <option value="0">Postmenopausal</option>
+        </select>
+        <input type="hidden" name="Hormonal Changes_Postmenopausal" value="0">
+
+        <label>Family History:</label>
+        <select name="Family History_No">
+            <option value="1">No</option>
+            <option value="0">Yes</option>
+        </select>
+        <input type="hidden" name="Family History_Yes" value="0">
+
+        <label>Smoking:</label>
+        <select name="Smoking_No">
+            <option value="1">No</option>
+            <option value="0">Yes</option>
+        </select>
+        <input type="hidden" name="Smoking_Yes" value="0">
+
+        <label>Alcohol Consumption:</label>
+        <input type="number" name="Alcohol Consumption_Moderate" value="1">
+
+        <label>Medical Conditions:</label>
+        <select name="Medical Conditions_Hyperthyroidism">
+            <option value="1">Hyperthyroidism</option>
+            <option value="0">Other</option>
+        </select>
+        <input type="hidden" name="Medical Conditions_Rheumatoid Arthritis" value="0">
+
+        <label>Medications:</label>
+        <select name="Medications_Corticosteroids">
+            <option value="1">Using</option>
+            <option value="0">Not Using</option>
+        </select>
+
+        <label>Prior Fractures:</label>
+        <select name="Prior Fractures_No">
+            <option value="1">No</option>
+            <option value="0">Yes</option>
+        </select>
+        <input type="hidden" name="Prior Fractures_Yes" value="0">
+
+        <button type="submit">Predict</button>
+    </form>
 </body>
 </html>
