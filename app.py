@@ -5,8 +5,16 @@ import joblib
 
 
 app = Flask(__name__)
+from sklearn.preprocessing import MinMaxScaler
+import numpy as np
 
-scaler = joblib.load("scaler (3).pkl")
+# Manually reconstruct MinMaxScaler
+scaler = MinMaxScaler()
+scaler.min_ = np.array([0., 0., 0.])  # calculated as -min/(max-min)
+scaler.scale_ = 1 / (np.array([90.  1.  1.]) - np.array([18.  0.  0..]))
+scaler.data_min_ = np.array([18.  0.  0.])
+scaler.data_max_ = np.array([90.  1.  1.])
+scaler.data_range_ = scaler.data_max_ - scaler.data_min_
 model = joblib.load("best_xgboost_model (2).pkl")
 
 @app.route('/')
