@@ -16,8 +16,8 @@ scaler.data_range_ = scaler.data_max_ - scaler.data_min_
 scaler.scale_ = 1 / scaler.data_range_
 scaler.min_ = -scaler.data_min_ * scaler.scale_
 
-feature_order = [
-    'Age', 'Osteoporosis',
+FEATURE_NAMES = [
+    'Age', 'Race/Ethnicity', 'Body Weight', 'Osteoporosis',
     'Gender_Female', 'Gender_Male',
     'Hormonal Changes_Normal', 'Hormonal Changes_Postmenopausal',
     'Family History_No', 'Family History_Yes',
@@ -27,6 +27,7 @@ feature_order = [
     'Medications_Corticosteroids',
     'Prior Fractures_No', 'Prior Fractures_Yes'
 ]
+
 
 numerical_features = ['Age', 'Osteoporosis']
 
@@ -54,7 +55,8 @@ def predict():
         num_idx = [feature_order.index(f) for f in numerical_features]
         input_vector[:, num_idx] = scaler.transform(input_vector[:, num_idx])
 
-        dmatrix = xgb.DMatrix(input_vector)
+        dmatrix = xgb.DMatrix(input_vector, feature_names=FEATURE_NAMES)
+
         proba = booster.predict(dmatrix)
         prediction = int(proba[0] >= 0.5)
 
