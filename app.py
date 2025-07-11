@@ -6,7 +6,7 @@ from sklearn.preprocessing import MinMaxScaler
 app = Flask(__name__)
 
 # Load trained XGBoost model
-model = joblib.load("best_xgboost_model (3).pkl")
+model = joblib.load("xgboost_model.pkl")
 print(f"Loaded model: {type(model)}")
 
 # Recreate MinMaxScaler for numerical features
