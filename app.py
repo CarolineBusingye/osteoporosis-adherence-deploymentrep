@@ -6,7 +6,7 @@ from sklearn.preprocessing import MinMaxScaler
 app = Flask(__name__)
 
 # === Load model ===
-model = joblib.load("best_xgboost_model (5).pkl")
+model = joblib.load("best_xgboost_model.pkl")
 print(f"✅ Loaded: {type(model)}")
 
 # === Define feature order exactly as X_train.columns.tolist() ===
