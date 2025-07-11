@@ -8,7 +8,7 @@ app = Flask(__name__)
 
 # === 1️⃣ Load the full XGBClassifier ===
 try:
-    model = joblib.load("xgboost_model.pkl")
+    model = joblib.load("best_xgboost_model (5).pkl")
     print(f"✅ Loaded XGBClassifier: {type(model)}")
 except Exception as e:
     model = None
