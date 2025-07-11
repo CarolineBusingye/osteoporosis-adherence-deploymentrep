@@ -56,4 +56,27 @@ def predict():
             data = request.get_json(force=True)
             user_input = {feat: data.get(feat, 0) for feat in feature_order}
 
-        print(f"🔍 INPUT: {user_in_
+        print(f"🔍 INPUT: {user_input}")
+
+        # === Arrange ===
+        input_vector = np.array([user_input[feat] for feat in feature_order]).reshape(1, -1)
+
+        # === Scale numerical ===
+        idxs = [feature_order.index(f) for f in numerical_features]
+        input_vector_scaled = input_vector.copy()
+        input_vector_scaled[:, idxs] = scaler.transform(input_vector[:, idxs])
+
+        # === Predict ===
+        pred = model.predict(input_vector_scaled)
+        proba = model.predict_proba(input_vector_scaled)
+
+        return jsonify({
+            'prediction': int(pred[0]),
+            'probability': proba[0].tolist()
+        })
+
+    except Exception as e:
+        return jsonify({'error': str(e)})
+
+if __name__ == '__main__':
+    app.run(debug=True)
