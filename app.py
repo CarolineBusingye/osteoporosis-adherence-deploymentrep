@@ -12,12 +12,13 @@ print("✅ Booster loaded.")
 
 # ✅ Recreate your scaler
 scaler = MinMaxScaler()
-scaler.data_min_ = np.array([18., 0., 1., 40.])
-scaler.data_max_ = np.array([90., 1., 5., 120.])
+scaler.data_min_ = np.array([18., 0., 1., 40.])  # adjust to your training min
+scaler.data_max_ = np.array([90., 1., 5., 120.])  # adjust to your training max
 scaler.data_range_ = scaler.data_max_ - scaler.data_min_
 scaler.scale_ = 1 / scaler.data_range_
 scaler.min_ = -scaler.data_min_ * scaler.scale_
 
+# ✅ Feature names exactly match training DataFrame
 feature_order = [
     'Age', 'Osteoporosis', 'Race/Ethnicity', 'Body Weight',
     'Gender_Female', 'Gender_Male',
@@ -49,10 +50,13 @@ def predict():
 
         input_vector = np.array([user_input[f] for f in feature_order]).reshape(1, -1)
 
+        # ✅ Scale numerical only
         num_idx = [feature_order.index(f) for f in numerical_features]
         input_vector[:, num_idx] = scaler.transform(input_vector[:, num_idx])
 
-        dmatrix = xgb.DMatrix(input_vector)
+        # ✅ ✅ FIX: Add feature_names to DMatrix to match Booster
+        dmatrix = xgb.DMatrix(input_vector, feature_names=feature_order)
+
         prob = booster.predict(dmatrix)
         pred = int(prob[0] >= 0.5)
 
