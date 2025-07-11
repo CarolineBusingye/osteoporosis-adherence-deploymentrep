@@ -5,16 +5,21 @@ from sklearn.preprocessing import MinMaxScaler
 
 app = Flask(__name__)
 
-# === Load model ===
-model = joblib.load("best_xgboost_model.pkl")
-print(f"✅ Loaded: {type(model)}")
+# ✅ Load your trained XGBClassifier — no `.use_label_encoder` needed!
+model = joblib.load("best_xgboost_model (5).pkl")
+print(f"Model loaded: {type(model)}")
 
-# === Define feature order exactly as X_train.columns.tolist() ===
+# ✅ Recreate your scaler
+scaler = MinMaxScaler()
+scaler.data_min_ = np.array([18., 0.])  # example
+scaler.data_max_ = np.array([90., 1.])  # example
+scaler.data_range_ = scaler.data_max_ - scaler.data_min_
+scaler.scale_ = 1 / scaler.data_range_
+scaler.min_ = -scaler.data_min_ * scaler.scale_
+
+# ✅ Make sure this matches your X_train.columns!
 feature_order = [
-    'Age',
-    'Osteoporosis',
-    'Race/Ethnicity',
-    'Body Weight',
+    'Age', 'Osteoporosis', 'Race/Ethnicity', 'Body Weight',
     'Gender_Female', 'Gender_Male',
     'Hormonal Changes_Normal', 'Hormonal Changes_Postmenopausal',
     'Family History_No', 'Family History_Yes',
@@ -25,15 +30,7 @@ feature_order = [
     'Prior Fractures_No', 'Prior Fractures_Yes'
 ]
 
-numerical_features = ['Age', 'Osteoporosis', 'Body Weight']  # and others if you scale them!
-
-# === Recreate scaler ===
-scaler = MinMaxScaler()
-scaler.data_min_ = np.array([18., 0., 40.])  # example: match training min for Age, Osteoporosis, Body Weight
-scaler.data_max_ = np.array([90., 1., 150.])
-scaler.data_range_ = scaler.data_max_ - scaler.data_min_
-scaler.scale_ = 1 / scaler.data_range_
-scaler.min_ = -scaler.data_min_ * scaler.scale_
+numerical_features = ['Age', 'Osteoporosis', 'Race/Ethnicity', 'Body Weight']
 
 @app.route('/')
 def home():
@@ -42,37 +39,25 @@ def home():
 @app.route('/predict', methods=['POST'])
 def predict():
     try:
-        if request.form:
-            # 🟢 For HTML form
-            user_input = {}
-            for feat in feature_order:
-                val = request.form.get(feat)
-                if feat in numerical_features:
-                    user_input[feat] = float(val) if val else 0.0
-                else:
-                    user_input[feat] = int(val) if val else 0
-        else:
-            # 🟢 For JSON API
-            data = request.get_json(force=True)
-            user_input = {feat: data.get(feat, 0) for feat in feature_order}
+        user_input = {}
+        for feat in feature_order:
+            val = request.form.get(feat)
+            if feat in numerical_features:
+                user_input[feat] = float(val) if val else 0.0
+            else:
+                user_input[feat] = int(val) if val else 0
 
-        print(f"🔍 INPUT: {user_input}")
+        input_vector = np.array([user_input[f] for f in feature_order]).reshape(1, -1)
 
-        # === Arrange ===
-        input_vector = np.array([user_input[feat] for feat in feature_order]).reshape(1, -1)
+        num_idx = [feature_order.index(f) for f in numerical_features]
+        input_vector[:, num_idx] = scaler.transform(input_vector[:, num_idx])
 
-        # === Scale numerical ===
-        idxs = [feature_order.index(f) for f in numerical_features]
-        input_vector_scaled = input_vector.copy()
-        input_vector_scaled[:, idxs] = scaler.transform(input_vector[:, idxs])
-
-        # === Predict ===
-        pred = model.predict(input_vector_scaled)
-        proba = model.predict_proba(input_vector_scaled)
+        prediction = model.predict(input_vector)
+        proba = model.predict_proba(input_vector).tolist()
 
         return jsonify({
-            'prediction': int(pred[0]),
-            'probability': proba[0].tolist()
+            'prediction': int(prediction[0]),
+            'probability': proba
         })
 
     except Exception as e:
