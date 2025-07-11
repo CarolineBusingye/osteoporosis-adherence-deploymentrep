@@ -1,120 +1,150 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Osteoporosis Adherence Predictor</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 40px;
-            background-color: #f2f2f2;
-        }
+  <meta charset="UTF-8" />
+  <title>Osteoporosis Adherence Predictor</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #e0f7fa, #80deea);
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      min-height: 100vh;
+    }
 
-        form {
-            background-color: white;
-            padding: 25px;
-            border-radius: 10px;
-            width: 500px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
-        }
+    .container {
+      background: #fff;
+      margin-top: 60px;
+      padding: 40px 30px;
+      border-radius: 12px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+      width: 100%;
+      max-width: 500px;
+    }
 
-        label {
-            display: block;
-            margin-top: 10px;
-        }
+    h2 {
+      text-align: center;
+      color: #00796b;
+      margin-bottom: 25px;
+    }
 
-        input, select {
-            width: 100%;
-            padding: 8px;
-            margin-top: 5px;
-        }
+    label {
+      display: block;
+      margin: 15px 0 5px;
+      color: #333;
+      font-weight: 500;
+    }
 
-        button {
-            margin-top: 20px;
-            padding: 10px;
-            background-color: #007bff;
-            color: white;
-            border: none;
-            width: 100%;
-            border-radius: 5px;
-            font-size: 16px;
-        }
-    </style>
+    input, select {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      box-sizing: border-box;
+      font-size: 14px;
+    }
+
+    input:focus, select:focus {
+      border-color: #00796b;
+      outline: none;
+    }
+
+    button {
+      width: 100%;
+      margin-top: 25px;
+      background: #00796b;
+      color: #fff;
+      border: none;
+      padding: 12px;
+      border-radius: 5px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+
+    button:hover {
+      background: #004d40;
+    }
+  </style>
 </head>
 <body>
-
-    <h2>Osteoporosis Adherence Prediction</h2>
+  <div class="container">
+    <h2>Osteoporosis Adherence Predictor</h2>
     <form method="POST" action="/predict">
-        <!-- Numerical Inputs -->
-        <label>Age:</label>
-        <input type="number" name="Age" required>
+      <!-- Numerical Inputs -->
+      <label>Age:</label>
+      <input type="number" name="Age" required />
 
-        <label>Osteoporosis (0 = No, 1 = Yes):</label>
-        <input type="number" name="Osteoporosis" min="0" max="1" required>
+      <label>Osteoporosis (0 = No, 1 = Yes):</label>
+      <input type="number" name="Osteoporosis" min="0" max="1" required />
 
-        <!-- One-Hot Encoded Categorical Inputs -->
-        <label>Gender:</label>
-        <select name="Gender_Female" onchange="toggleComplement(this, 'Gender_Male')">
-            <option value="1">Female</option>
-            <option value="0">Male</option>
-        </select>
-        <input type="hidden" name="Gender_Male" value="0">
+      <!-- One-Hot Encoded Categorical Inputs -->
+      <label>Gender:</label>
+      <select name="Gender_Female" onchange="toggleComplement(this, 'Gender_Male')">
+        <option value="1">Female</option>
+        <option value="0">Male</option>
+      </select>
+      <input type="hidden" name="Gender_Male" value="0" />
 
-        <label>Hormonal Changes:</label>
-        <select name="Hormonal Changes_Normal" onchange="toggleComplement(this, 'Hormonal Changes_Postmenopausal')">
-            <option value="1">Normal</option>
-            <option value="0">Postmenopausal</option>
-        </select>
-        <input type="hidden" name="Hormonal Changes_Postmenopausal" value="0">
+      <label>Hormonal Changes:</label>
+      <select name="Hormonal Changes_Normal" onchange="toggleComplement(this, 'Hormonal Changes_Postmenopausal')">
+        <option value="1">Normal</option>
+        <option value="0">Postmenopausal</option>
+      </select>
+      <input type="hidden" name="Hormonal Changes_Postmenopausal" value="0" />
 
-        <label>Family History:</label>
-        <select name="Family History_No" onchange="toggleComplement(this, 'Family History_Yes')">
-            <option value="1">No</option>
-            <option value="0">Yes</option>
-        </select>
-        <input type="hidden" name="Family History_Yes" value="0">
+      <label>Family History:</label>
+      <select name="Family History_No" onchange="toggleComplement(this, 'Family History_Yes')">
+        <option value="1">No</option>
+        <option value="0">Yes</option>
+      </select>
+      <input type="hidden" name="Family History_Yes" value="0" />
 
-        <label>Smoking:</label>
-        <select name="Smoking_No" onchange="toggleComplement(this, 'Smoking_Yes')">
-            <option value="1">No</option>
-            <option value="0">Yes</option>
-        </select>
-        <input type="hidden" name="Smoking_Yes" value="0">
+      <label>Smoking:</label>
+      <select name="Smoking_No" onchange="toggleComplement(this, 'Smoking_Yes')">
+        <option value="1">No</option>
+        <option value="0">Yes</option>
+      </select>
+      <input type="hidden" name="Smoking_Yes" value="0" />
 
-        <label>Alcohol Consumption:</label>
-        <select name="Alcohol Consumption_Moderate">
-            <option value="1">Moderate</option>
-        </select>
+      <label>Alcohol Consumption:</label>
+      <select name="Alcohol Consumption_Moderate">
+        <option value="1">Moderate</option>
+      </select>
 
-        <label>Medical Conditions:</label>
-        <select name="Medical Conditions_Hyperthyroidism" onchange="toggleComplement(this, 'Medical Conditions_Rheumatoid Arthritis')">
-            <option value="1">Hyperthyroidism</option>
-            <option value="0">Rheumatoid Arthritis</option>
-        </select>
-        <input type="hidden" name="Medical Conditions_Rheumatoid Arthritis" value="0">
+      <label>Medical Conditions:</label>
+      <select name="Medical Conditions_Hyperthyroidism" onchange="toggleComplement(this, 'Medical Conditions_Rheumatoid Arthritis')">
+        <option value="1">Hyperthyroidism</option>
+        <option value="0">Rheumatoid Arthritis</option>
+      </select>
+      <input type="hidden" name="Medical Conditions_Rheumatoid Arthritis" value="0" />
 
-        <label>Medications:</label>
-        <select name="Medications_Corticosteroids">
-            <option value="1">Using Corticosteroids</option>
-            <option value="0">Not Using</option>
-        </select>
+      <label>Medications:</label>
+      <select name="Medications_Corticosteroids">
+        <option value="1">Using Corticosteroids</option>
+        <option value="0">Not Using</option>
+      </select>
 
-        <label>Prior Fractures:</label>
-        <select name="Prior Fractures_No" onchange="toggleComplement(this, 'Prior Fractures_Yes')">
-            <option value="1">No</option>
-            <option value="0">Yes</option>
-        </select>
-        <input type="hidden" name="Prior Fractures_Yes" value="0">
+      <label>Prior Fractures:</label>
+      <select name="Prior Fractures_No" onchange="toggleComplement(this, 'Prior Fractures_Yes')">
+        <option value="1">No</option>
+        <option value="0">Yes</option>
+      </select>
+      <input type="hidden" name="Prior Fractures_Yes" value="0" />
 
-        <button type="submit">Predict Adherence</button>
+      <button type="submit">Predict Adherence</button>
     </form>
+  </div>
 
-    <script>
-        function toggleComplement(selectElem, complementName) {
-            const value = parseInt(selectElem.value);
-            const complementInput = document.querySelector(`input[name="${complementName}"]`);
-            complementInput.value = value === 1 ? 0 : 1;
-        }
-    </script>
-
+  <script>
+    function toggleComplement(selectElem, complementName) {
+      const value = parseInt(selectElem.value);
+      const complementInput = document.querySelector(`input[name="${complementName}"]`);
+      complementInput.value = value === 1 ? 0 : 1;
+    }
+  </script>
 </body>
 </html>
