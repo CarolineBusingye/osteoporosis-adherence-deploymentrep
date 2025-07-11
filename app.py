@@ -5,12 +5,11 @@ from sklearn.preprocessing import MinMaxScaler
 
 app = Flask(__name__)
 
-# Load model
-model = joblib.load("best_xgboost_model (3).pkl")
-print(type(model))
+# Load trained XGBoost model
+model = joblib.load("best_xgboost_model.pkl")
+print(f"Loaded model: {type(model)}")
 
-
-# Recreate MinMaxScaler for ['Age', 'Osteoporosis']
+# Recreate MinMaxScaler for numerical features
 scaler = MinMaxScaler()
 scaler.data_min_ = np.array([18., 0.])
 scaler.data_max_ = np.array([90., 1.])
@@ -18,7 +17,7 @@ scaler.data_range_ = scaler.data_max_ - scaler.data_min_
 scaler.scale_ = 1 / scaler.data_range_
 scaler.min_ = -scaler.data_min_ * scaler.scale_
 
-# Updated feature list (excluding 'Adherence')
+# Features (must match training order!)
 feature_order = [
     'Age', 'Osteoporosis',
     'Gender_Female', 'Gender_Male',
@@ -40,21 +39,29 @@ def home():
 @app.route('/predict', methods=['POST'])
 def predict():
     try:
-        # Get input data
         if request.form:
-            user_input = {k: float(request.form.get(k)) for k in feature_order}
+            # HTML form case
+            user_input = {}
+            for feat in feature_order:
+                val = request.form.get(feat)
+                if feat in numerical_features:
+                    user_input[feat] = float(val) if val else 0.0
+                else:
+                    user_input[feat] = int(val) if val else 0
         else:
-            user_input = request.get_json(force=True)
+            # JSON API case
+            data = request.get_json(force=True)
+            user_input = {feat: data.get(feat, 0) for feat in feature_order}
 
-        # Order inputs correctly
+        # Create input array in correct order
         input_vector = np.array([user_input[feat] for feat in feature_order]).reshape(1, -1)
 
-        # Scale numerical values
+        # Scale only numerical features
         input_vector_scaled = input_vector.copy()
-        indices = [feature_order.index(f) for f in numerical_features]
-        input_vector_scaled[:, indices] = scaler.transform(input_vector[:, indices])
+        num_idx = [feature_order.index(f) for f in numerical_features]
+        input_vector_scaled[:, num_idx] = scaler.transform(input_vector[:, num_idx])
 
-        # Predict
+        # Make prediction
         prediction = model.predict(input_vector_scaled)
         return jsonify({'prediction': int(prediction[0])})
 
