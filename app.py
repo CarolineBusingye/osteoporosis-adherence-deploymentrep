@@ -6,7 +6,7 @@ from sklearn.preprocessing import MinMaxScaler
 app = Flask(__name__)
 
 # ✅ Load your trained XGBClassifier — no `.use_label_encoder` needed!
-model = joblib.load("best_xgboost_model (5).pkl")
+model = joblib.load("clean_xgb_model.pkl")
 print(f"Model loaded: {type(model)}")
 
 # ✅ Recreate your scaler
