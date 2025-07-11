@@ -1,23 +1,20 @@
-import xgboost as xgb
-import numpy as np
 from flask import Flask, request, jsonify, render_template
+import numpy as np
+import joblib
 from sklearn.preprocessing import MinMaxScaler
 
 app = Flask(__name__)
 
-# Load only the booster
-booster = xgb.Booster()
-booster.load_model("xgb_booster.json")
+# === Load model ===
+model = joblib.load("best_xgboost_model.pkl")
+print(f"✅ Loaded: {type(model)}")
 
-scaler = MinMaxScaler()
-scaler.data_min_ = np.array([18., 0.])
-scaler.data_max_ = np.array([90., 1.])
-scaler.data_range_ = scaler.data_max_ - scaler.data_min_
-scaler.scale_ = 1 / scaler.data_range_
-scaler.min_ = -scaler.data_min_ * scaler.scale_
-
-FEATURE_NAMES = [
-    'Age', 'Race/Ethnicity', 'Body Weight', 'Osteoporosis',
+# === Define feature order exactly as X_train.columns.tolist() ===
+feature_order = [
+    'Age',
+    'Osteoporosis',
+    'Race/Ethnicity',
+    'Body Weight',
     'Gender_Female', 'Gender_Male',
     'Hormonal Changes_Normal', 'Hormonal Changes_Postmenopausal',
     'Family History_No', 'Family History_Yes',
@@ -28,8 +25,15 @@ FEATURE_NAMES = [
     'Prior Fractures_No', 'Prior Fractures_Yes'
 ]
 
+numerical_features = ['Age', 'Osteoporosis', 'Body Weight']  # and others if you scale them!
 
-numerical_features = ['Age', 'Osteoporosis']
+# === Recreate scaler ===
+scaler = MinMaxScaler()
+scaler.data_min_ = np.array([18., 0., 40.])  # example: match training min for Age, Osteoporosis, Body Weight
+scaler.data_max_ = np.array([90., 1., 150.])
+scaler.data_range_ = scaler.data_max_ - scaler.data_min_
+scaler.scale_ = 1 / scaler.data_range_
+scaler.min_ = -scaler.data_min_ * scaler.scale_
 
 @app.route('/')
 def home():
@@ -39,6 +43,7 @@ def home():
 def predict():
     try:
         if request.form:
+            # 🟢 For HTML form
             user_input = {}
             for feat in feature_order:
                 val = request.form.get(feat)
@@ -47,27 +52,8 @@ def predict():
                 else:
                     user_input[feat] = int(val) if val else 0
         else:
+            # 🟢 For JSON API
             data = request.get_json(force=True)
             user_input = {feat: data.get(feat, 0) for feat in feature_order}
 
-        input_vector = np.array([user_input[feat] for feat in feature_order]).reshape(1, -1)
-
-        num_idx = [feature_order.index(f) for f in numerical_features]
-        input_vector[:, num_idx] = scaler.transform(input_vector[:, num_idx])
-
-        dmatrix = xgb.DMatrix(input_vector, feature_names=FEATURE_NAMES)
-
-        proba = booster.predict(dmatrix)
-        prediction = int(proba[0] >= 0.5)
-
-        return jsonify({
-            'mode': 'Booster',
-            'prediction': prediction,
-            'probability': float(proba[0])
-        })
-
-    except Exception as e:
-        return jsonify({'error': str(e)})
-
-if __name__ == '__main__':
-    app.run(debug=True)
+        print(f"🔍 INPUT: {user_in_
