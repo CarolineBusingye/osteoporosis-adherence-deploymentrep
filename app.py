@@ -1,24 +1,23 @@
 from flask import Flask, request, jsonify, render_template
 import numpy as np
-import joblib
+import xgboost as xgb
 from sklearn.preprocessing import MinMaxScaler
 
 app = Flask(__name__)
 
-# ✅ Load your trained XGBClassifier — no `.use_label_encoder` needed!
-model = joblib.load("clean_xgb_model.pkl")
-print(f"✅ Model loaded: {type(model)}")
+# ✅ Load only the Booster (version safe)
+booster = xgb.Booster()
+booster.load_model("xgb_booster.json")
+print("✅ Booster loaded.")
 
-# ✅ Recreate your scaler FOR 4 NUMERICAL FEATURES!
-# Make sure you update these to match your training data min/max
+# ✅ Recreate your scaler
 scaler = MinMaxScaler()
-scaler.data_min_ = np.array([18., 0., 1., 40.])   # [Age, Osteoporosis, Race/Ethnicity, Body Weight]
-scaler.data_max_ = np.array([90., 1., 5., 120.])  # Example: adjust to your true ranges!
+scaler.data_min_ = np.array([18., 0., 1., 40.])
+scaler.data_max_ = np.array([90., 1., 5., 120.])
 scaler.data_range_ = scaler.data_max_ - scaler.data_min_
 scaler.scale_ = 1 / scaler.data_range_
 scaler.min_ = -scaler.data_min_ * scaler.scale_
 
-# ✅ Make sure this matches your X_train.columns!
 feature_order = [
     'Age', 'Osteoporosis', 'Race/Ethnicity', 'Body Weight',
     'Gender_Female', 'Gender_Male',
@@ -50,16 +49,16 @@ def predict():
 
         input_vector = np.array([user_input[f] for f in feature_order]).reshape(1, -1)
 
-        # ✅ Transform only numerical part
         num_idx = [feature_order.index(f) for f in numerical_features]
         input_vector[:, num_idx] = scaler.transform(input_vector[:, num_idx])
 
-        prediction = model.predict(input_vector)
-        proba = model.predict_proba(input_vector).tolist()
+        dmatrix = xgb.DMatrix(input_vector)
+        prob = booster.predict(dmatrix)
+        pred = int(prob[0] >= 0.5)
 
         return jsonify({
-            'prediction': int(prediction[0]),
-            'probability': proba
+            'prediction': pred,
+            'probability': float(prob[0])
         })
 
     except Exception as e:
