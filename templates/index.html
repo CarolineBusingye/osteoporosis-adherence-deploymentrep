@@ -76,12 +76,18 @@
     <form method="POST" action="/predict">
       <!-- Numerical Inputs -->
       <label>Age:</label>
-      <input type="number" name="Age" required />
+      <input type="number" name="Age" min="18" required />
 
       <label>Osteoporosis (0 = No, 1 = Yes):</label>
       <input type="number" name="Osteoporosis" min="0" max="1" required />
 
-      <!-- One-Hot Encoded Categorical Inputs -->
+      <label>Race/Ethnicity (e.g., 1 = Asian, 2 = White, etc.):</label>
+      <input type="number" name="Race/Ethnicity" min="0" required />
+
+      <label>Body Weight (kg):</label>
+      <input type="number" name="Body Weight" min="20" required />
+
+      <!-- One-Hot Encoded Inputs -->
       <label>Gender:</label>
       <select name="Gender_Female" onchange="toggleComplement(this, 'Gender_Male')">
         <option value="1">Female</option>
