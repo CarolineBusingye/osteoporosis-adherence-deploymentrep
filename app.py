@@ -2,14 +2,28 @@ from flask import Flask, request, jsonify, render_template
 import numpy as np
 import joblib
 from sklearn.preprocessing import MinMaxScaler
+import xgboost as xgb
 
 app = Flask(__name__)
 
-# Load trained XGBoost model
-model = joblib.load("xgboost_model.pkl")
-print(f"Loaded model: {type(model)}")
+# === 1️⃣ Load the full XGBClassifier ===
+try:
+    model = joblib.load("xgboost_model.pkl")
+    print(f"✅ Loaded XGBClassifier: {type(model)}")
+except Exception as e:
+    model = None
+    print(f"⚠️ Could not load XGBClassifier: {e}")
 
-# Recreate MinMaxScaler for numerical features
+# === 2️⃣ Load the Booster ===
+try:
+    booster = xgb.Booster()
+    booster.load_model("xgb_booster.json")
+    print(f"✅ Loaded Booster: {type(booster)}")
+except Exception as e:
+    booster = None
+    print(f"⚠️ Could not load Booster: {e}")
+
+# === 3️⃣ Recreate scaler ===
 scaler = MinMaxScaler()
 scaler.data_min_ = np.array([18., 0.])
 scaler.data_max_ = np.array([90., 1.])
@@ -17,7 +31,7 @@ scaler.data_range_ = scaler.data_max_ - scaler.data_min_
 scaler.scale_ = 1 / scaler.data_range_
 scaler.min_ = -scaler.data_min_ * scaler.scale_
 
-# Features (must match training order!)
+# === 4️⃣ Feature order ===
 feature_order = [
     'Age', 'Osteoporosis',
     'Gender_Female', 'Gender_Male',
@@ -39,8 +53,8 @@ def home():
 @app.route('/predict', methods=['POST'])
 def predict():
     try:
+        # --- 5️⃣ Get user input ---
         if request.form:
-            # HTML form case
             user_input = {}
             for feat in feature_order:
                 val = request.form.get(feat)
@@ -49,21 +63,40 @@ def predict():
                 else:
                     user_input[feat] = int(val) if val else 0
         else:
-            # JSON API case
             data = request.get_json(force=True)
             user_input = {feat: data.get(feat, 0) for feat in feature_order}
 
-        # Create input array in correct order
+        # --- 6️⃣ Arrange input ---
         input_vector = np.array([user_input[feat] for feat in feature_order]).reshape(1, -1)
 
-        # Scale only numerical features
+        # Scale numerical parts
         input_vector_scaled = input_vector.copy()
         num_idx = [feature_order.index(f) for f in numerical_features]
         input_vector_scaled[:, num_idx] = scaler.transform(input_vector[:, num_idx])
 
-        # Make prediction
-        prediction = model.predict(input_vector_scaled)
-        return jsonify({'prediction': int(prediction[0])})
+        # --- 7️⃣ Use XGBClassifier if available ---
+        if model:
+            prediction = model.predict(input_vector_scaled)
+            proba = model.predict_proba(input_vector_scaled).tolist()
+            return jsonify({
+                'mode': 'XGBClassifier',
+                'prediction': int(prediction[0]),
+                'probabilities': proba
+            })
+
+        # --- 8️⃣ Otherwise, use Booster ---
+        elif booster:
+            dmatrix = xgb.DMatrix(input_vector_scaled)
+            proba = booster.predict(dmatrix)
+            prediction = int(proba[0] >= 0.5)  # binary: logistic output
+            return jsonify({
+                'mode': 'Booster',
+                'prediction': prediction,
+                'probability': float(proba[0])
+            })
+
+        else:
+            return jsonify({'error': 'No model or booster loaded!'})
 
     except Exception as e:
         return jsonify({'error': str(e)})
