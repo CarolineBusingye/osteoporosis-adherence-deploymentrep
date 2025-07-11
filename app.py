@@ -7,12 +7,13 @@ app = Flask(__name__)
 
 # ✅ Load your trained XGBClassifier — no `.use_label_encoder` needed!
 model = joblib.load("clean_xgb_model.pkl")
-print(f"Model loaded: {type(model)}")
+print(f"✅ Model loaded: {type(model)}")
 
-# ✅ Recreate your scaler
+# ✅ Recreate your scaler FOR 4 NUMERICAL FEATURES!
+# Make sure you update these to match your training data min/max
 scaler = MinMaxScaler()
-scaler.data_min_ = np.array([18., 0.])  # example
-scaler.data_max_ = np.array([90., 1.])  # example
+scaler.data_min_ = np.array([18., 0., 1., 40.])   # [Age, Osteoporosis, Race/Ethnicity, Body Weight]
+scaler.data_max_ = np.array([90., 1., 5., 120.])  # Example: adjust to your true ranges!
 scaler.data_range_ = scaler.data_max_ - scaler.data_min_
 scaler.scale_ = 1 / scaler.data_range_
 scaler.min_ = -scaler.data_min_ * scaler.scale_
@@ -49,6 +50,7 @@ def predict():
 
         input_vector = np.array([user_input[f] for f in feature_order]).reshape(1, -1)
 
+        # ✅ Transform only numerical part
         num_idx = [feature_order.index(f) for f in numerical_features]
         input_vector[:, num_idx] = scaler.transform(input_vector[:, num_idx])
 
