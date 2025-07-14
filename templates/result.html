@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Prediction Result</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f8fb;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    .result-box {
+      background: #ffffff;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      padding: 30px 40px;
+      text-align: center;
+      max-width: 400px;
+    }
+
+    h2 {
+      color: #00796b;
+    }
+
+    .probability {
+      margin-top: 20px;
+      font-size: 1.1em;
+    }
+
+    .bar {
+      margin-top: 10px;
+      width: 100%;
+      height: 20px;
+      background: #ddd;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    .fill {
+      height: 100%;
+      background: #00796b;
+      color: #fff;
+      text-align: right;
+      line-height: 20px;
+      padding-right: 8px;
+      font-size: 0.9em;
+    }
+
+    .status {
+      font-size: 1.2em;
+      font-weight: bold;
+      color: #333;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div class="result-box">
+    <h2>Prediction Result</h2>
+
+    <div class="status">
+      {% if prediction == 1 %}
+        ✅ The patient is likely to adhere to treatment.
+      {% else %}
+        ❌ The patient is NOT likely to adhere to treatment.
+      {% endif %}
+    </div>
+
+    <div class="probability">
+      Probability: {{ probability }}%
+      <div class="bar">
+        <div class="fill" style="width: {{ probability }}%;">{{ probability }}%</div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
