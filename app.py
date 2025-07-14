@@ -1,25 +1,25 @@
-from flask import Flask, request, jsonify, render_template
+from flask import Flask, request, render_template
 import numpy as np
 import xgboost as xgb
 from sklearn.preprocessing import MinMaxScaler
 
 app = Flask(__name__)
 
-# ✅ Load only the Booster (version safe)
+# Load Booster
 booster = xgb.Booster()
 booster.load_model("xgb_booster.json")
 print("✅ Booster loaded.")
 
-# ✅ Recreate your scaler
+# Recreate scaler
 scaler = MinMaxScaler()
-scaler.data_min_ = np.array([18., 0., 1., 40.])  # adjust to your training min
-scaler.data_max_ = np.array([90., 1., 5., 120.])  # adjust to your training max
+scaler.data_min_ = np.array([18., 0., 1., 40.])
+scaler.data_max_ = np.array([90., 1., 5., 120.])
 scaler.data_range_ = scaler.data_max_ - scaler.data_min_
 scaler.scale_ = 1 / scaler.data_range_
 scaler.min_ = -scaler.data_min_ * scaler.scale_
 
 feature_order = [
-    'Age', 'Race/Ethnicity', 'Body Weight', 'Osteoporosis',
+    'Age', 'Osteoporosis', 'Race/Ethnicity', 'Body Weight',
     'Gender_Female', 'Gender_Male',
     'Hormonal Changes_Normal', 'Hormonal Changes_Postmenopausal',
     'Family History_No', 'Family History_Yes',
@@ -30,7 +30,7 @@ feature_order = [
     'Prior Fractures_No', 'Prior Fractures_Yes'
 ]
 
-numerical_features = ['Age', 'Race/Ethnicity', 'Body Weight', 'Osteoporosis']
+numerical_features = ['Age', 'Osteoporosis', 'Race/Ethnicity', 'Body Weight']
 
 @app.route('/')
 def home():
@@ -48,24 +48,21 @@ def predict():
                 user_input[feat] = int(val) if val else 0
 
         input_vector = np.array([user_input[f] for f in feature_order]).reshape(1, -1)
-
-        # ✅ Scale numerical only
         num_idx = [feature_order.index(f) for f in numerical_features]
         input_vector[:, num_idx] = scaler.transform(input_vector[:, num_idx])
 
-        # ✅ ✅ FIX: Add feature_names to DMatrix to match Booster
-        dmatrix = xgb.DMatrix(input_vector, feature_names=feature_order)
-
+        dmatrix = xgb.DMatrix(input_vector)
         prob = booster.predict(dmatrix)
         pred = int(prob[0] >= 0.5)
 
-        return jsonify({
-            'prediction': pred,
-            'probability': float(prob[0])
-        })
+        return render_template(
+            'result.html',
+            prediction=pred,
+            probability=round(prob[0] * 100, 2)
+        )
 
     except Exception as e:
-        return jsonify({'error': str(e)})
+        return str(e)
 
 if __name__ == '__main__':
     app.run(debug=True)
