@@ -22,7 +22,7 @@ scaler.scale_ = 1 / scaler.data_range_
 scaler.min_ = -scaler.data_min_ * scaler.scale_
 
 feature_order = [
-    'Age', 'Osteoporosis', 'Race/Ethnicity', 'Body Weight',
+    'Age', 'Race/Ethnicity', 'Body Weight', 'Osteoporosis',
     'Gender_Female', 'Gender_Male',
     'Hormonal Changes_Normal', 'Hormonal Changes_Postmenopausal',
     'Family History_No', 'Family History_Yes',
@@ -33,7 +33,8 @@ feature_order = [
     'Prior Fractures_No', 'Prior Fractures_Yes'
 ]
 
-numerical_features = ['Age', 'Osteoporosis', 'Race/Ethnicity', 'Body Weight']
+numerical_features = ['Age', 'Race/Ethnicity', 'Body Weight', 'Osteoporosis']
+
 
 @app.route('/')
 def home():
