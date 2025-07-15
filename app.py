@@ -4,17 +4,16 @@ import xgboost as xgb
 from sklearn.preprocessing import MinMaxScaler
 from lime.lime_tabular import LimeTabularExplainer
 import shap
-from sklearn.inspection import permutation_importance
 import pandas as pd
 
 app = Flask(__name__)
 
-# Booster
-booster = xgb.Booster()
-booster.load_model("xgb_booster.json")
-print("✅ Booster loaded.")
+# Load your trained XGBClassifier (not raw Booster)
+model = xgb.XGBClassifier()
+model.load_model("xgb_booster.json")  # This works if you saved your classifier with `.save_model`
+print("✅ XGBClassifier loaded.")
 
-# Scaler
+# Recreate scaler
 scaler = MinMaxScaler()
 scaler.data_min_ = np.array([18., 0., 1., 40.])
 scaler.data_max_ = np.array([90., 1., 5., 120.])
@@ -51,53 +50,40 @@ def predict():
             else:
                 user_input[feat] = int(val) if val else 0
 
-        input_vector = np.array([user_input[f] for f in feature_order]).reshape(1, -1)
-        num_idx = [feature_order.index(f) for f in numerical_features]
-        input_vector[:, num_idx] = scaler.transform(input_vector[:, num_idx])
+        # Wrap in DataFrame so feature names are always correct
+        input_df = pd.DataFrame([user_input])[feature_order]
 
-        dmatrix = xgb.DMatrix(input_vector, feature_names=feature_order)
-        prob = booster.predict(dmatrix)
-        pred = int(prob[0] >= 0.5)
+        num_idx = [f for f in numerical_features]
+        input_df[num_idx] = scaler.transform(input_df[num_idx])
 
-        # === 1️⃣ LIME ===
+        prob = model.predict_proba(input_df)[0][1]
+        pred = int(prob >= 0.5)
+
+        # === LIME ===
         explainer = LimeTabularExplainer(
-            training_data=np.random.rand(100, len(feature_order)),  # dummy, replace with your X_train
+            training_data=np.random.rand(100, len(feature_order)),  # fake, replace with your X_train
             feature_names=feature_order,
             class_names=['No', 'Yes'],
             mode='classification'
         )
-        # You’d normally pass the model.predict_proba, so here we wrap Booster:
         lime_exp = explainer.explain_instance(
-            input_vector[0],
-            lambda x: booster.predict(xgb.DMatrix(x, feature_names=feature_order)).reshape(-1, 1),
+            input_df.iloc[0].values,
+            model.predict_proba,
             num_features=5
         )
         lime_list = lime_exp.as_list()
 
-        # === 2️⃣ SHAP ===
-        shap.initjs()
-        booster_model = xgb.XGBClassifier()
-        booster_model._Booster = booster
-        explainer_shap = shap.TreeExplainer(booster)
-        shap_values = explainer_shap.shap_values(input_vector)
+        # === SHAP ===
+        explainer_shap = shap.TreeExplainer(model)
+        shap_values = explainer_shap.shap_values(input_df)
         shap_vals = dict(zip(feature_order, shap_values[0].tolist()))
-
-        # === 3️⃣ Permutation ===
-        # For this example you’d use your training set — here we fake with random for demo
-        X_dummy = np.random.rand(50, len(feature_order))
-        y_dummy = np.random.randint(0, 2, 50)
-        perm_importance = permutation_importance(
-            booster_model, X_dummy, y_dummy, n_repeats=5, random_state=0
-        )
-        perm_result = dict(zip(feature_order, perm_importance.importances_mean.tolist()))
 
         return render_template(
             'result.html',
             prediction=pred,
-            probability=round(prob[0] * 100, 2),
+            probability=round(prob * 100, 2),
             lime_list=lime_list,
-            shap_vals=shap_vals,
-            perm_result=perm_result
+            shap_vals=shap_vals
         )
 
     except Exception as e:
